@@ -32,6 +32,7 @@ var (
 
 var _ auth.GroupRepository = (*groupRepository)(nil)
 
+
 type groupRepository struct {
 	db Database
 }

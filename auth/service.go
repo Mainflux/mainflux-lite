@@ -10,14 +10,50 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/ulid"
+	"github.com/open-policy-agent/opa/rego"
+	"github.com/open-policy-agent/opa/storage/inmem"
+	"github.com/open-policy-agent/opa/util"
 )
 
 const (
+	create = iota
+	update
+	view
+	delete
+	viewList
+	members
+	membership
+
+	groupsObject     = "groups"
 	loginDuration    = 10 * time.Hour
 	recoveryDuration = 5 * time.Minute
+	policyQuery      = "data.mainflux.allow"
+	policyModule     = "mainflux.rego"
+	policyPackage    = "mainflux"
 )
 
 var (
+	actions = map[int]string{
+		create:     "create",
+		update:     "update",
+		view:       "view",
+		delete:     "delete",
+		viewList:   "viewList",
+		members:    "members",
+		membership: "membership",
+	}
+
+	module = `
+	package mainflux
+
+	default allow = true
+	
+	allow {
+		p := object.get(data.policies.groups, input.groups, {})
+		p.action[_] == input.action
+		p.object == input.object
+	}`
+
 	// ErrUnauthorizedAccess represents unauthorized access.
 	ErrUnauthorizedAccess = errors.New("unauthorized access")
 
@@ -48,6 +84,12 @@ var (
 
 	// ErrFailedToRetrieveChildren failed to retrieve groups.
 	ErrFailedToRetrieveChildren = errors.New("failed to retrieve all groups")
+
+	// ErrFailedToRetrievePolicy
+	ErrFailedToRetrievePolicy = errors.New("failed to retrieve a policy")
+
+	// ErrAuthorization
+	ErrAuthorization = errors.New("failed to process authorization")
 
 	errIssueUser = errors.New("failed to issue new user key")
 	errIssueTmp  = errors.New("failed to issue new temporary key")
@@ -109,6 +151,7 @@ type service struct {
 
 // New instantiates the auth service implementation.
 func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer) Service {
+
 	return &service{
 		tokenizer:    tokenizer,
 		keys:         keys,
@@ -228,9 +271,35 @@ func (svc service) login(token string) (string, string, error) {
 
 func (svc service) CreateGroup(ctx context.Context, token string, group Group) (Group, error) {
 	user, err := svc.Identify(ctx, token)
+	// if err != nil {
+	// 	return Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
+	// }
+
+	p := `{
+		"policies": {
+			"groups":{
+				"groupName1": {
+					"action": ["read"],
+					"object": "things"
+				}    
+			}
+		}
+	}`
+
+	var policy map[string]interface{}
+	err = util.UnmarshalJSON([]byte(p), &policy)
 	if err != nil {
-		return Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
+		return Group{}, err
 	}
+	p := Policy{
+		Subject:   "user",
+		SubjectID: user.ID,
+		Object:    "group",
+	}
+	svc.groups.RetrievePolicy(ctx, p)
+
+	req := createAuthorizationRequest(user.ID, actions[create], groupsObject)
+	svc.authorize(ctx, req, policy)
 
 	ulid, err := svc.ulidProvider.ID()
 	if err != nil {
@@ -253,6 +322,7 @@ func (svc service) CreateGroup(ctx context.Context, token string, group Group) (
 }
 
 func (svc service) ListGroups(ctx context.Context, token string, pm PageMetadata) (GroupPage, error) {
+
 	if _, err := svc.Identify(ctx, token); err != nil {
 		return GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
@@ -330,4 +400,37 @@ func (svc service) ListMemberships(ctx context.Context, token string, memberID s
 
 func getTimestmap() time.Time {
 	return time.Now().UTC().Round(time.Millisecond)
+}
+
+func (svc service) authorize(ctx context.Context, req interface{}, policy map[string]interface{}) (bool, error) {
+	store := inmem.NewFromObject(policy)
+	// maybe to set path for store
+
+	rego := rego.New(
+		rego.Query(policyQuery),
+		rego.Package(policyPackage),
+		rego.Module(policyModule, module),
+		rego.Store(store),
+		rego.Input(req),
+	)
+
+	rs, err := rego.Eval(ctx)
+
+	if err != nil {
+		return false, errors.Wrap(err, ErrAuthorization)
+	}
+
+	if len(rs) == 0 {
+		return false, ErrAuthorization
+	}
+
+	return rs[0].Expressions[0].Value.(bool), nil
+}
+
+func createAuthorizationRequest(groupID, userID, action, object string) map[string]interface{} {
+	return map[string]interface{}{
+		"user":   userID,
+		"action": action,
+		"object": object,
+	}
 }

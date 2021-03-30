@@ -127,3 +127,19 @@ func (grm groupRepositoryMiddleware) Unassign(ctx context.Context, groupID strin
 
 	return grm.repo.Unassign(ctx, groupID, memberIDs...)
 }
+
+func (grm groupRepositoryMiddleware) SavePolicy(ctx context.Context, p auth.Policy) (auth.Policy, error) {
+	span := createSpan(ctx, grm.tracer, unassign)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return grm.repo.SavePolicy(ctx, p)
+}
+
+func (grm groupRepositoryMiddleware) RetrievePolicy(ctx context.Context, p auth.Policy) (map[string]interface{}, error) {
+	span := createSpan(ctx, grm.tracer, unassign)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return grm.repo.RetrievePolicy(ctx, p)
+}

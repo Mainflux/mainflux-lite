@@ -15,7 +15,7 @@ require (
 	github.com/gocql/gocql v0.0.0-20200624222514-34081eda590e
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/gopcua/opcua v0.1.6
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/hokaccha/go-prettyjson v0.0.0-20190818114111-108c894c2c0e
@@ -31,6 +31,7 @@ require (
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
+	github.com/open-policy-agent/opa v0.27.1
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/ory/dockertest/v3 v3.6.0
 	github.com/pelletier/go-toml v1.8.0
@@ -45,8 +46,7 @@ require (
 	github.com/uber/jaeger-client-go v2.24.0+incompatible
 	go.mongodb.org/mongo-driver v1.3.5
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	golang.org/x/tools v0.0.0-20200502202811-ed308ab3e770 // indirect
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	gonum.org/v1/gonum v0.7.0
 	google.golang.org/grpc v1.30.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect

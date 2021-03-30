@@ -85,6 +85,18 @@ type Group struct {
 	UpdatedAt time.Time
 }
 
+type Policy struct {
+	ID          string    `json:"id"          db:"id"`
+	Subject     string    `json:"subject"     db:"subject"`
+	SubjectID   string    `json:"subject_id"  db:"subject_id"`
+	Object      string    `json:"object"      db:"object"`
+	ObjectID    string    `json:"object_id"   db:"object_id"`
+	Actions     []string  `json:"actions"     db:"actions"`
+	Description string    `json:"description" db:"description"`
+	CreatedAt   time.Time `json:"created_at"  db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"  db:"updated_at"`
+}
+
 type PageMetadata struct {
 	Total    uint64
 	Offset   uint64
@@ -174,4 +186,11 @@ type GroupRepository interface {
 
 	// Unassign removes a member from a group
 	Unassign(ctx context.Context, groupID string, memberIDs ...string) error
+
+	SavePolicy(ctx context.Context, p Policy) (Policy, error)
+	RetrievePolicy(ctx context.Context, p Policy) (map[string]interface{}, error)
 }
+
+// type PolicyRepository interface {
+
+// }

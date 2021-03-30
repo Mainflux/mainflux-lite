@@ -67,6 +67,8 @@ services:
       - mainflux-base-net
     volumes:
       - mainflux-auth-db-volume:/var/lib/postgresql/data
+    ports:
+      - 6002:5432
 
   auth:
     image: mainflux/auth:${MF_RELEASE_TAG}
