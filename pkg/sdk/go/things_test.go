@@ -138,6 +138,14 @@ func TestCreateThings(t *testing.T) {
 		sdk.Thing{ID: "001", Name: "1", Key: "1"},
 		sdk.Thing{ID: "002", Name: "2", Key: "2"},
 	}
+	thingsWithExtID := []sdk.Thing {
+		sdk.Thing{ID: "fe6b4e92-cc98-425e-b0aa-000000000001", Name: "1", Key: "1", Metadata:metadata},
+		sdk.Thing{ID: "fe6b4e92-cc98-425e-b0aa-000000000002", Name: "2", Key: "2", Metadata:metadata},
+	}
+	thingsWithWrongExtID := []sdk.Thing {
+		sdk.Thing{ID: "b0aa-000000000001", Name: "1", Key: "1", Metadata:metadata},
+		sdk.Thing{ID: "b0aa-000000000002", Name: "2", Key: "2", Metadata:metadata2},
+	}
 
 	cases := []struct {
 		desc   string
@@ -173,6 +181,20 @@ func TestCreateThings(t *testing.T) {
 			token:  wrongValue,
 			err:    createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
 			res:    []sdk.Thing{},
+		},
+		{
+			desc:   "create new things with external UUID",
+			things: thingsWithExtID,
+			token:  token,
+			err:    nil,
+			res:    things,
+		},
+		{
+			desc:   "create new things with wrong external UUID",
+			things: thingsWithWrongExtID,
+			token:  token,
+			err:    createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			res:    things,
 		},
 	}
 	for _, tc := range cases {

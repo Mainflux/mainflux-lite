@@ -24,6 +24,8 @@ func TestCreateChannel(t *testing.T) {
 	ts := newThingsServer(svc)
 	defer ts.Close()
 
+	chWithWrongExtID := sdk.Channel{ID: "b0aa-000000000001", Name: "1", Metadata:metadata}
+
 	sdkConf := sdk.Config{
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
@@ -70,6 +72,20 @@ func TestCreateChannel(t *testing.T) {
 			token:   token,
 			err:     nil,
 			empty:   false,
+		},
+		{
+			desc:   "create a new channel with external UUID",
+			channel: channel,
+			token:  token,
+			err:    nil,
+			empty:  false,
+		},
+		{
+			desc:   "create a new channel with wrong external UUID",
+			channel: chWithWrongExtID,
+			token:  token,
+			err:    createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			empty:   true,
 		},
 	}
 

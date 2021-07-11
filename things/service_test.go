@@ -45,6 +45,8 @@ func newService(tokens map[string]string) things.Service {
 
 func TestCreateThings(t *testing.T) {
 	svc := newService(map[string]string{token: email})
+	meta := things.Metadata{}
+	meta["type"] = "extid"
 
 	cases := []struct {
 		desc   string
@@ -63,6 +65,20 @@ func TestCreateThings(t *testing.T) {
 			things: []things.Thing{{Name: "e"}},
 			token:  wrongValue,
 			err:    things.ErrUnauthorizedAccess,
+		},
+		{
+			desc:   "create new things with external UUID",
+			things: []things.Thing{{ID: "fe6b4e92-cc98-425e-b0aa-000000000001", Name: "a", Metadata: meta},
+				{ID: "fe6b4e92-cc98-425e-b0aa-000000000002", Name: "b", Metadata: meta}},
+			token:  token,
+			err:    nil,
+		},
+		{
+			desc:   "create new things with external wrong UUID",
+			things: []things.Thing{{ID: "b0aa-000000000001", Name: "a", Metadata: meta},
+				{ID: "b0aa-000000000002", Name: "b", Metadata: meta}},
+			token:  token,
+			err:    nil,
 		},
 	}
 
@@ -538,6 +554,8 @@ func TestRemoveThing(t *testing.T) {
 
 func TestCreateChannels(t *testing.T) {
 	svc := newService(map[string]string{token: email})
+	meta := things.Metadata{}
+	meta["type"] = "extid"
 
 	cases := []struct {
 		desc     string
@@ -556,6 +574,20 @@ func TestCreateChannels(t *testing.T) {
 			channels: []things.Channel{{Name: "e"}},
 			token:    wrongValue,
 			err:      things.ErrUnauthorizedAccess,
+		},
+		{
+			desc:   "create new channels with external UUID",
+			channels: []things.Channel{{ID: "fe6b4e92-cc98-425e-b0aa-000000000001", Name: "a", Metadata: meta},
+				{ID: "fe6b4e92-cc98-425e-b0aa-000000000002", Name: "b", Metadata: meta}},
+			token:  token,
+			err:    nil,
+		},
+		{
+			desc:   "create new channels with external wrong UUID",
+			channels: []things.Channel{{ID: "b0aa-000000000001", Name: "a", Metadata: meta},
+				{ID: "b0aa-000000000002", Name: "b", Metadata: meta}},
+			token:  token,
+			err:    nil,
 		},
 	}
 
